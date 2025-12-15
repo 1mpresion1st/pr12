@@ -5,6 +5,9 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import '../../../../data/legacy/attachments_service.dart';
 import '../../../../data/legacy/transactions_service.dart';
+import '../../../../domain/usecases/attachment_gallery_filters/get_attachment_gallery_filters.dart';
+import '../../../../domain/usecases/attachment_gallery_filters/save_attachment_gallery_filters.dart';
+import '../../../../domain/usecases/attachment_gallery_filters/clear_attachment_gallery_filters.dart';
 import '../stores/attachments_gallery_store.dart';
 import '../../transactions/routes.dart' as transactions_routes;
 
@@ -27,7 +30,7 @@ class _AttachmentsGalleryScreenContentState
     super.didChangeDependencies();
     if (!_isInitialized) {
       _isInitialized = true;
-      widget.store.load();
+      widget.store.init().then((_) => widget.store.load());
     }
   }
 
@@ -178,6 +181,7 @@ class _AttachmentsGalleryScreenContentState
                                 from = null;
                                 to = null;
                               });
+                              store.clearFilters();
                             },
                             child: const Text('Сбросить'),
                           ),
@@ -318,6 +322,9 @@ class AttachmentsGalleryScreen extends StatelessWidget {
       : store = AttachmentsGalleryStore(
           GetIt.I<AttachmentsService>(),
           GetIt.I<TransactionsService>(),
+          GetIt.I<GetAttachmentGalleryFilters>(),
+          GetIt.I<SaveAttachmentGalleryFilters>(),
+          GetIt.I<ClearAttachmentGalleryFilters>(),
         );
 
   final AttachmentsGalleryStore store;

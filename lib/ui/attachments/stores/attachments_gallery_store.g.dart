@@ -144,6 +144,16 @@ mixin _$AttachmentsGalleryStore on _AttachmentsGalleryStore, Store {
     });
   }
 
+  late final _$initAsyncAction = AsyncAction(
+    '_AttachmentsGalleryStore.init',
+    context: context,
+  );
+
+  @override
+  Future<void> init() {
+    return _$initAsyncAction.run(() => super.init());
+  }
+
   late final _$loadAsyncAction = AsyncAction(
     '_AttachmentsGalleryStore.load',
     context: context,
@@ -162,6 +172,16 @@ mixin _$AttachmentsGalleryStore on _AttachmentsGalleryStore, Store {
   @override
   Future<void> refresh() {
     return _$refreshAsyncAction.run(() => super.refresh());
+  }
+
+  late final _$clearFiltersAsyncAction = AsyncAction(
+    '_AttachmentsGalleryStore.clearFilters',
+    context: context,
+  );
+
+  @override
+  Future<void> clearFilters() {
+    return _$clearFiltersAsyncAction.run(() => super.clearFilters());
   }
 
   late final _$_AttachmentsGalleryStoreActionController = ActionController(

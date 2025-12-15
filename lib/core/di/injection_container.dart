@@ -52,7 +52,14 @@ import '../../domain/usecases/secure_storage/delete_secure_value.dart';
 import '../../domain/usecases/preferences/read_pref_string.dart';
 import '../../domain/usecases/preferences/write_pref_string.dart';
 import '../../domain/usecases/preferences/delete_pref_key.dart';
+import '../../domain/repositories/attachment_gallery_filters_repository.dart';
+import '../../domain/usecases/attachment_gallery_filters/get_attachment_gallery_filters.dart';
+import '../../domain/usecases/attachment_gallery_filters/save_attachment_gallery_filters.dart';
+import '../../domain/usecases/attachment_gallery_filters/clear_attachment_gallery_filters.dart';
+import '../../data/repositories/attachment_gallery_filters_repository_impl.dart';
+import '../../data/repositories/attachment_gallery_filters_repository_web_impl.dart';
 import '../../data/demo_data.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 // Legacy services for backward compatibility (temporary, will be removed)
 import '../../data/legacy/transactions_service.dart';
 import '../../data/legacy/goals_service.dart';
@@ -237,6 +244,28 @@ Future<void> setupDI() async {
   );
   getIt.registerLazySingleton<DeletePrefKey>(
     () => DeletePrefKey(getIt()),
+  );
+
+  // Attachment Gallery Filters Repository (SQLite or Web fallback)
+  if (kIsWeb) {
+    getIt.registerLazySingleton<AttachmentGalleryFiltersRepository>(
+      () => AttachmentGalleryFiltersRepositoryWebImpl(),
+    );
+  } else {
+    getIt.registerLazySingleton<AttachmentGalleryFiltersRepository>(
+      () => AttachmentGalleryFiltersRepositoryImpl(),
+    );
+  }
+
+  // Use Cases - Attachment Gallery Filters
+  getIt.registerLazySingleton<GetAttachmentGalleryFilters>(
+    () => GetAttachmentGalleryFilters(getIt()),
+  );
+  getIt.registerLazySingleton<SaveAttachmentGalleryFilters>(
+    () => SaveAttachmentGalleryFilters(getIt()),
+  );
+  getIt.registerLazySingleton<ClearAttachmentGalleryFilters>(
+    () => ClearAttachmentGalleryFilters(getIt()),
   );
 
   // Legacy Services (for backward compatibility with old screens)
