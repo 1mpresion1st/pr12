@@ -4,14 +4,17 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
+import 'package:mobx/mobx.dart' show reaction, ReactionDisposer;
 import 'package:image_picker/image_picker.dart';
 import '../../../../domain/entities/transaction.dart';
 import '../../../../domain/entities/goal.dart';
 import '../../../../domain/usecases/goals/get_all_goals.dart';
 import '../../../../domain/usecases/transactions/add_transaction.dart';
 import '../../../../domain/usecases/attachments/add_attachment.dart';
+import '../../../../domain/usecases/secure_storage/read_secure_value.dart';
+import '../../../../domain/usecases/secure_storage/write_secure_value.dart';
+import '../../../../domain/usecases/secure_storage/delete_secure_value.dart';
 import '../stores/add_transaction_store.dart';
-import '../../goals/stores/goals_list_store.dart';
 
 class _AddTransactionScreenState extends StatefulWidget {
   final AddTransactionStore store;
@@ -27,11 +30,57 @@ class _AddTransactionScreenStateState
     extends State<_AddTransactionScreenState> {
   List<Goal>? _goals;
   bool _goalsLoading = false;
+  late TextEditingController _amountController;
+  late TextEditingController _noteController;
+  late List<ReactionDisposer> _disposers;
 
   @override
   void initState() {
     super.initState();
+    _amountController = TextEditingController(text: widget.store.amountText);
+    _noteController = TextEditingController(text: widget.store.noteText);
     _loadGoals();
+    _initSecureStorage();
+    
+    // Настраиваем реакции для синхронизации контроллеров с observable полями
+    _disposers = [
+      reaction(
+        (_) => widget.store.amountText,
+        (String value) {
+          if (_amountController.text != value) {
+            _amountController.text = value;
+          }
+        },
+      ),
+      reaction(
+        (_) => widget.store.noteText,
+        (String value) {
+          if (_noteController.text != value) {
+            _noteController.text = value;
+          }
+        },
+      ),
+    ];
+  }
+
+  Future<void> _initSecureStorage() async {
+    await widget.store.init();
+    // Обновляем контроллеры после загрузки из secure storage
+    if (mounted) {
+      _amountController.text = widget.store.amountText;
+      _noteController.text = widget.store.noteText;
+    }
+  }
+
+  @override
+  void dispose() {
+    for (final disposer in _disposers) {
+      disposer();
+    }
+    _amountController.dispose();
+    _noteController.dispose();
+    widget.store.dispose();
+    super.dispose();
   }
 
   Future<void> _loadGoals() async {
@@ -137,6 +186,7 @@ class _AddTransactionScreenStateState
                 ),
                 const SizedBox(height: 20),
                 TextField(
+                  controller: _amountController,
                   keyboardType:
                       const TextInputType.numberWithOptions(decimal: true),
                   decoration: const InputDecoration(
@@ -144,7 +194,8 @@ class _AddTransactionScreenStateState
                     border: OutlineInputBorder(),
                   ),
                   onChanged: (value) {
-                    final amount = double.tryParse(value);
+                    widget.store.onAmountChanged(value);
+                    final amount = double.tryParse(value.replaceAll(',', '.'));
                     widget.store.setAmount(amount);
                   },
                 ),
@@ -205,13 +256,16 @@ class _AddTransactionScreenStateState
                   ),
                 const SizedBox(height: 12),
                 TextField(
+                  controller: _noteController,
                   decoration: const InputDecoration(
                     labelText: 'Комментарий',
                     border: OutlineInputBorder(),
                   ),
                   maxLines: 3,
-                  onChanged: (value) =>
-                      widget.store.setNote(value.isEmpty ? null : value),
+                  onChanged: (value) {
+                    widget.store.onNoteChanged(value);
+                    widget.store.setNote(value.isEmpty ? null : value);
+                  },
                 ),
                 const SizedBox(height: 20),
                 Text(
@@ -340,6 +394,9 @@ class AddTransactionScreen extends StatelessWidget {
       : store = AddTransactionStore(
           GetIt.I<AddTransaction>(),
           GetIt.I<AddAttachment>(),
+          GetIt.I<ReadSecureValue>(),
+          GetIt.I<WriteSecureValue>(),
+          GetIt.I<DeleteSecureValue>(),
         );
 
   final AddTransactionStore store;

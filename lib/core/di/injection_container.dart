@@ -1,4 +1,5 @@
 import 'package:get_it/get_it.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../data/datasources/local/transactions_local_data_source.dart';
 import '../../data/datasources/local/goals_local_data_source.dart';
 import '../../data/datasources/local/category_budgets_local_data_source.dart';
@@ -9,11 +10,13 @@ import '../../data/repositories/goals_repository_impl.dart';
 import '../../data/repositories/category_budgets_repository_impl.dart';
 import '../../data/repositories/recurring_payments_repository_impl.dart';
 import '../../data/repositories/attachments_repository_impl.dart';
+import '../../data/repositories/secure_storage_repository_impl.dart';
 import '../../domain/repositories/transactions_repository.dart';
 import '../../domain/repositories/goals_repository.dart';
 import '../../domain/repositories/category_budgets_repository.dart';
 import '../../domain/repositories/recurring_payments_repository.dart';
 import '../../domain/repositories/attachments_repository.dart';
+import '../../domain/repositories/secure_storage_repository.dart';
 import '../../domain/usecases/transactions/get_all_transactions.dart';
 import '../../domain/usecases/transactions/get_transactions.dart';
 import '../../domain/usecases/transactions/get_transaction_by_id.dart';
@@ -40,6 +43,9 @@ import '../../domain/usecases/attachments/delete_attachment.dart';
 import '../../domain/usecases/statistics/get_category_stats.dart';
 import '../../domain/usecases/statistics/get_balance_dynamics.dart';
 import '../../domain/usecases/statistics/get_total_amount.dart';
+import '../../domain/usecases/secure_storage/read_secure_value.dart';
+import '../../domain/usecases/secure_storage/write_secure_value.dart';
+import '../../domain/usecases/secure_storage/delete_secure_value.dart';
 import '../../data/demo_data.dart';
 // Legacy services for backward compatibility (temporary, will be removed)
 import '../../data/legacy/transactions_service.dart';
@@ -69,6 +75,11 @@ Future<void> setupDI() async {
     () => AttachmentsLocalDataSourceImpl(),
   );
 
+  // Secure Storage
+  getIt.registerLazySingleton<FlutterSecureStorage>(
+    () => const FlutterSecureStorage(),
+  );
+
   // Repositories
   getIt.registerLazySingleton<TransactionsRepository>(
     () => TransactionsRepositoryImpl(
@@ -93,6 +104,11 @@ Future<void> setupDI() async {
   getIt.registerLazySingleton<AttachmentsRepository>(
     () => AttachmentsRepositoryImpl(
       localDataSource: getIt(),
+    ),
+  );
+  getIt.registerLazySingleton<SecureStorageRepository>(
+    () => SecureStorageRepositoryImpl(
+      getIt(),
     ),
   );
 
@@ -184,6 +200,17 @@ Future<void> setupDI() async {
   );
   getIt.registerLazySingleton<GetTotalAmount>(
     () => GetTotalAmount(getIt()),
+  );
+
+  // Use Cases - Secure Storage
+  getIt.registerLazySingleton<ReadSecureValue>(
+    () => ReadSecureValue(getIt()),
+  );
+  getIt.registerLazySingleton<WriteSecureValue>(
+    () => WriteSecureValue(getIt()),
+  );
+  getIt.registerLazySingleton<DeleteSecureValue>(
+    () => DeleteSecureValue(getIt()),
   );
 
   // Legacy Services (for backward compatibility with old screens)

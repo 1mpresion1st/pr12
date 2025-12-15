@@ -9,6 +9,24 @@ part of 'add_transaction_store.dart';
 // ignore_for_file: non_constant_identifier_names, unnecessary_brace_in_string_interps, unnecessary_lambdas, prefer_expression_function_bodies, lines_longer_than_80_chars, avoid_as, avoid_annotating_with_dynamic, no_leading_underscores_for_local_identifiers
 
 mixin _$AddTransactionStore on _AddTransactionStore, Store {
+  late final _$amountTextAtom = Atom(
+    name: '_AddTransactionStore.amountText',
+    context: context,
+  );
+
+  @override
+  String get amountText {
+    _$amountTextAtom.reportRead();
+    return super.amountText;
+  }
+
+  @override
+  set amountText(String value) {
+    _$amountTextAtom.reportWrite(value, super.amountText, () {
+      super.amountText = value;
+    });
+  }
+
   late final _$amountAtom = Atom(
     name: '_AddTransactionStore.amount',
     context: context,
@@ -78,6 +96,24 @@ mixin _$AddTransactionStore on _AddTransactionStore, Store {
   set date(DateTime value) {
     _$dateAtom.reportWrite(value, super.date, () {
       super.date = value;
+    });
+  }
+
+  late final _$noteTextAtom = Atom(
+    name: '_AddTransactionStore.noteText',
+    context: context,
+  );
+
+  @override
+  String get noteText {
+    _$noteTextAtom.reportRead();
+    return super.noteText;
+  }
+
+  @override
+  set noteText(String value) {
+    _$noteTextAtom.reportWrite(value, super.noteText, () {
+      super.noteText = value;
     });
   }
 
@@ -175,6 +211,28 @@ mixin _$AddTransactionStore on _AddTransactionStore, Store {
     );
   }
 
+  late final _$initAsyncAction = AsyncAction(
+    '_AddTransactionStore.init',
+    context: context,
+  );
+
+  @override
+  Future<void> init() {
+    return _$initAsyncAction.run(() => super.init());
+  }
+
+  late final _$onSavedSuccessfullyAsyncAction = AsyncAction(
+    '_AddTransactionStore.onSavedSuccessfully',
+    context: context,
+  );
+
+  @override
+  Future<void> onSavedSuccessfully() {
+    return _$onSavedSuccessfullyAsyncAction.run(
+      () => super.onSavedSuccessfully(),
+    );
+  }
+
   late final _$saveAsyncAction = AsyncAction(
     '_AddTransactionStore.save',
     context: context,
@@ -189,6 +247,30 @@ mixin _$AddTransactionStore on _AddTransactionStore, Store {
     name: '_AddTransactionStore',
     context: context,
   );
+
+  @override
+  void onAmountChanged(String value) {
+    final _$actionInfo = _$_AddTransactionStoreActionController.startAction(
+      name: '_AddTransactionStore.onAmountChanged',
+    );
+    try {
+      return super.onAmountChanged(value);
+    } finally {
+      _$_AddTransactionStoreActionController.endAction(_$actionInfo);
+    }
+  }
+
+  @override
+  void onNoteChanged(String value) {
+    final _$actionInfo = _$_AddTransactionStoreActionController.startAction(
+      name: '_AddTransactionStore.onNoteChanged',
+    );
+    try {
+      return super.onNoteChanged(value);
+    } finally {
+      _$_AddTransactionStoreActionController.endAction(_$actionInfo);
+    }
+  }
 
   @override
   void setAmount(double? value) {
@@ -289,10 +371,12 @@ mixin _$AddTransactionStore on _AddTransactionStore, Store {
   @override
   String toString() {
     return '''
+amountText: ${amountText},
 amount: ${amount},
 type: ${type},
 category: ${category},
 date: ${date},
+noteText: ${noteText},
 note: ${note},
 goalId: ${goalId},
 isSaving: ${isSaving},
