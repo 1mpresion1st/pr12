@@ -188,6 +188,16 @@ mixin _$AddGoalStore on _AddGoalStore, Store {
     });
   }
 
+  late final _$initAsyncAction = AsyncAction(
+    '_AddGoalStore.init',
+    context: context,
+  );
+
+  @override
+  Future<void> init() {
+    return _$initAsyncAction.run(() => super.init());
+  }
+
   late final _$saveAsyncAction = AsyncAction(
     '_AddGoalStore.save',
     context: context,
@@ -208,6 +218,16 @@ mixin _$AddGoalStore on _AddGoalStore, Store {
     return _$deleteAsyncAction.run(() => super.delete());
   }
 
+  late final _$clearDraftAsyncAction = AsyncAction(
+    '_AddGoalStore.clearDraft',
+    context: context,
+  );
+
+  @override
+  Future<void> clearDraft() {
+    return _$clearDraftAsyncAction.run(() => super.clearDraft());
+  }
+
   late final _$_AddGoalStoreActionController = ActionController(
     name: '_AddGoalStore',
     context: context,
@@ -220,6 +240,18 @@ mixin _$AddGoalStore on _AddGoalStore, Store {
     );
     try {
       return super.setName(value);
+    } finally {
+      _$_AddGoalStoreActionController.endAction(_$actionInfo);
+    }
+  }
+
+  @override
+  void onNameChanged(String value) {
+    final _$actionInfo = _$_AddGoalStoreActionController.startAction(
+      name: '_AddGoalStore.onNameChanged',
+    );
+    try {
+      return super.onNameChanged(value);
     } finally {
       _$_AddGoalStoreActionController.endAction(_$actionInfo);
     }
@@ -268,6 +300,18 @@ mixin _$AddGoalStore on _AddGoalStore, Store {
     );
     try {
       return super.setDescription(value);
+    } finally {
+      _$_AddGoalStoreActionController.endAction(_$actionInfo);
+    }
+  }
+
+  @override
+  void onDescriptionChanged(String value) {
+    final _$actionInfo = _$_AddGoalStoreActionController.startAction(
+      name: '_AddGoalStore.onDescriptionChanged',
+    );
+    try {
+      return super.onDescriptionChanged(value);
     } finally {
       _$_AddGoalStoreActionController.endAction(_$actionInfo);
     }

@@ -1,5 +1,6 @@
 import 'package:get_it/get_it.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../data/datasources/local/transactions_local_data_source.dart';
 import '../../data/datasources/local/goals_local_data_source.dart';
 import '../../data/datasources/local/category_budgets_local_data_source.dart';
@@ -11,12 +12,14 @@ import '../../data/repositories/category_budgets_repository_impl.dart';
 import '../../data/repositories/recurring_payments_repository_impl.dart';
 import '../../data/repositories/attachments_repository_impl.dart';
 import '../../data/repositories/secure_storage_repository_impl.dart';
+import '../../data/repositories/preferences_repository_impl.dart';
 import '../../domain/repositories/transactions_repository.dart';
 import '../../domain/repositories/goals_repository.dart';
 import '../../domain/repositories/category_budgets_repository.dart';
 import '../../domain/repositories/recurring_payments_repository.dart';
 import '../../domain/repositories/attachments_repository.dart';
 import '../../domain/repositories/secure_storage_repository.dart';
+import '../../domain/repositories/preferences_repository.dart';
 import '../../domain/usecases/transactions/get_all_transactions.dart';
 import '../../domain/usecases/transactions/get_transactions.dart';
 import '../../domain/usecases/transactions/get_transaction_by_id.dart';
@@ -46,6 +49,9 @@ import '../../domain/usecases/statistics/get_total_amount.dart';
 import '../../domain/usecases/secure_storage/read_secure_value.dart';
 import '../../domain/usecases/secure_storage/write_secure_value.dart';
 import '../../domain/usecases/secure_storage/delete_secure_value.dart';
+import '../../domain/usecases/preferences/read_pref_string.dart';
+import '../../domain/usecases/preferences/write_pref_string.dart';
+import '../../domain/usecases/preferences/delete_pref_key.dart';
 import '../../data/demo_data.dart';
 // Legacy services for backward compatibility (temporary, will be removed)
 import '../../data/legacy/transactions_service.dart';
@@ -80,6 +86,10 @@ Future<void> setupDI() async {
     () => const FlutterSecureStorage(),
   );
 
+  // Shared Preferences
+  final sharedPreferences = await SharedPreferences.getInstance();
+  getIt.registerSingleton<SharedPreferences>(sharedPreferences);
+
   // Repositories
   getIt.registerLazySingleton<TransactionsRepository>(
     () => TransactionsRepositoryImpl(
@@ -108,6 +118,11 @@ Future<void> setupDI() async {
   );
   getIt.registerLazySingleton<SecureStorageRepository>(
     () => SecureStorageRepositoryImpl(
+      getIt(),
+    ),
+  );
+  getIt.registerLazySingleton<PreferencesRepository>(
+    () => PreferencesRepositoryImpl(
       getIt(),
     ),
   );
@@ -211,6 +226,17 @@ Future<void> setupDI() async {
   );
   getIt.registerLazySingleton<DeleteSecureValue>(
     () => DeleteSecureValue(getIt()),
+  );
+
+  // Use Cases - Preferences
+  getIt.registerLazySingleton<ReadPrefString>(
+    () => ReadPrefString(getIt()),
+  );
+  getIt.registerLazySingleton<WritePrefString>(
+    () => WritePrefString(getIt()),
+  );
+  getIt.registerLazySingleton<DeletePrefKey>(
+    () => DeletePrefKey(getIt()),
   );
 
   // Legacy Services (for backward compatibility with old screens)

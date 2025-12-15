@@ -3,6 +3,9 @@ import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import '../../../../data/legacy/goals_service.dart';
+import '../../../../domain/usecases/preferences/read_pref_string.dart';
+import '../../../../domain/usecases/preferences/write_pref_string.dart';
+import '../../../../domain/usecases/preferences/delete_pref_key.dart';
 import '../stores/add_goal_store.dart';
 
 class AddGoalScreen extends StatefulWidget {
@@ -31,6 +34,9 @@ class _AddGoalScreenState extends State<AddGoalScreen> {
     super.initState();
     store = AddGoalStore(
       GetIt.I<GoalsService>(),
+      GetIt.I<ReadPrefString>(),
+      GetIt.I<WritePrefString>(),
+      GetIt.I<DeletePrefKey>(),
       initialGoal: widget.initialGoal,
     );
 
@@ -55,6 +61,18 @@ class _AddGoalScreenState extends State<AddGoalScreen> {
     iconController = TextEditingController(text: store.icon ?? '');
     descriptionController = TextEditingController(text: store.description ?? '');
     _updateControllers();
+    
+    // Загружаем черновик из preferences после создания контроллеров
+    _initPreferences();
+  }
+
+  Future<void> _initPreferences() async {
+    await store.init();
+    // Обновляем контроллеры после загрузки из preferences
+    if (mounted) {
+      nameController.text = store.name;
+      descriptionController.text = store.description ?? '';
+    }
   }
 
   void _updateControllers() {
@@ -84,6 +102,7 @@ class _AddGoalScreenState extends State<AddGoalScreen> {
     for (var c in subtaskAmountControllers) {
       c.dispose();
     }
+    store.dispose();
     super.dispose();
   }
 

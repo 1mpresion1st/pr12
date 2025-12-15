@@ -1,5 +1,9 @@
+import 'dart:async';
 import 'package:mobx/mobx.dart';
 import '../../../../data/legacy/goals_service.dart';
+import '../../../../domain/usecases/preferences/read_pref_string.dart';
+import '../../../../domain/usecases/preferences/write_pref_string.dart';
+import '../../../../domain/usecases/preferences/delete_pref_key.dart';
 
 part 'add_goal_store.g.dart';
 
@@ -7,7 +11,10 @@ class AddGoalStore = _AddGoalStore with _$AddGoalStore;
 
 abstract class _AddGoalStore with Store {
   _AddGoalStore(
-    this._goalsService, {
+    this._goalsService,
+    this._readPrefString,
+    this._writePrefString,
+    this._deletePrefKey, {
     Goal? initialGoal,
     List<GoalSubtask>? initialSubtasks,
   }) : _initialGoal = initialGoal {
@@ -27,7 +34,16 @@ abstract class _AddGoalStore with Store {
   }
 
   final GoalsService _goalsService;
+  final ReadPrefString _readPrefString;
+  final WritePrefString _writePrefString;
+  final DeletePrefKey _deletePrefKey;
   final Goal? _initialGoal;
+
+  Timer? _nameDebounceTimer;
+  Timer? _descriptionDebounceTimer;
+
+  static const String _nameKey = 'pr12:add_goal:name';
+  static const String _descriptionKey = 'pr12:add_goal:description';
 
   @observable
   String name = '';
@@ -73,7 +89,45 @@ abstract class _AddGoalStore with Store {
           .toList();
 
   @action
-  void setName(String value) => name = value;
+  Future<void> init() async {
+    // Не загружаем черновик в режиме редактирования
+    if (isEditMode) return;
+
+    try {
+      final savedName = await _readPrefString(_nameKey);
+      final savedDescription = await _readPrefString(_descriptionKey);
+
+      if (savedName != null && savedName.isNotEmpty) {
+        name = savedName;
+      }
+
+      if (savedDescription != null && savedDescription.isNotEmpty) {
+        description = savedDescription;
+      }
+    } catch (e) {
+      // Игнорируем ошибки при чтении из preferences
+    }
+  }
+
+  @action
+  void setName(String value) {
+    name = value;
+    // Сохраняем только если не в режиме редактирования
+    if (!isEditMode) {
+      onNameChanged(value);
+    }
+  }
+
+  @action
+  void onNameChanged(String value) {
+    // Debounce сохранения в preferences
+    _nameDebounceTimer?.cancel();
+    _nameDebounceTimer = Timer(const Duration(milliseconds: 400), () {
+      _writePrefString(_nameKey, value).catchError((_) {
+        // Игнорируем ошибки при записи в preferences
+      });
+    });
+  }
 
   @action
   void setTargetAmountText(String value) => targetAmountText = value;
@@ -85,7 +139,24 @@ abstract class _AddGoalStore with Store {
   void setIcon(String? value) => icon = value;
 
   @action
-  void setDescription(String? value) => description = value;
+  void setDescription(String? value) {
+    description = value;
+    // Сохраняем только если не в режиме редактирования
+    if (!isEditMode) {
+      onDescriptionChanged(value ?? '');
+    }
+  }
+
+  @action
+  void onDescriptionChanged(String value) {
+    // Debounce сохранения в preferences
+    _descriptionDebounceTimer?.cancel();
+    _descriptionDebounceTimer = Timer(const Duration(milliseconds: 400), () {
+      _writePrefString(_descriptionKey, value).catchError((_) {
+        // Игнорируем ошибки при записи в preferences
+      });
+    });
+  }
 
   @action
   void addSubtask() {
@@ -181,6 +252,9 @@ abstract class _AddGoalStore with Store {
         subtasks: subtasks,
       );
 
+      // Очищаем черновик после успешного сохранения
+      await clearDraft();
+
       return true;
     } catch (e) {
       errorMessage = 'Ошибка при сохранении цели';
@@ -207,6 +281,25 @@ abstract class _AddGoalStore with Store {
     } finally {
       isSaving = false;
     }
+  }
+
+  @action
+  Future<void> clearDraft() async {
+    // Отменяем таймеры debounce перед очисткой
+    _nameDebounceTimer?.cancel();
+    _descriptionDebounceTimer?.cancel();
+
+    try {
+      await _deletePrefKey(_nameKey);
+      await _deletePrefKey(_descriptionKey);
+    } catch (e) {
+      // Игнорируем ошибки при удалении из preferences
+    }
+  }
+
+  void dispose() {
+    _nameDebounceTimer?.cancel();
+    _descriptionDebounceTimer?.cancel();
   }
 }
 
